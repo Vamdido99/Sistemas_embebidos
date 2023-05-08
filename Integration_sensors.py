@@ -14,7 +14,7 @@ import Adafruit_ADS1x15
 def map(x1, in_min, in_max, out_min, out_max):  #function for sensor calibration
     return int((x1-in_min) * (out_max-out_min) / (in_max-in_min) + out_min)
 
-def Volt_Chanel(chanel):
+def volt_chanel(chanel):
     
     mult2 = 0.000125
     adc = Adafruit_ADS1x15.ADS1115()
@@ -26,7 +26,6 @@ def Volt_Chanel(chanel):
 def pH2_0():
     mult2 = 0.000125
     adc = Adafruit_ADS1x15.ADS1115()
-    
     buf = []
     for i in range(10):# Take 10 samples
         volt = adc.read_adc(0, gain=1) * mult2
@@ -50,14 +49,40 @@ def pH2_0():
 def WaterTemperature():
     sensor = W1ThermSensor() #Creamos el objeto sensor
     temperature = sensor.get_temperature()
-    return temperature
+    buf = []
+    for i in range(10):# Take 10 samples
+        buf.append(temperature)
+        buf.sort() # Sort samples and discard highest and lowest
+        avg = np.average(buf)
+        t=(round(avg,1))
+   
+    return t
 
+def Turbidity():
+    mult2 = 0.000125
+    adc = Adafruit_ADS1x15.ADS1115()
+    buf = []
+    for i in range(10):# Take 10 samples
+        volt = adc.read_adc(1, gain=1) * mult2
+        buf.append(volt)
+        buf.sort() # Sort samples and discard highest and lowest
+        avg = np.average(buf)
+        x1=(round(avg,2))
+        
+    #Ph sensor calibration parameters
+    in_min = 0.0 
+    in_max = 3.3
+    out_min = 0.0
+    out_max = 20
+    
+    Turbidity = map(x1, in_min, in_max, out_min, out_max)
+    
+    return Turbidity
+    
 
-
-
-#while True:
+while True:
                    #Obtenemos la temperatura en centígrados
-print(pH2_0())  #Imprimimos el resultado
+    print(pH2_0(),WaterTemperature(),Turbidity())  #Imprimimos el resultado
     
    # Ph()
 #time.sleep(1)                                         #Esperamos un segundo antes de t
