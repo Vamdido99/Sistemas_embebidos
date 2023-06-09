@@ -12,6 +12,7 @@ from adafruit_ads1x15.analog_in import AnalogIn
 import Adafruit_ADS1x15
 import requests
 import datetime
+import RPi.GPIO as GPIO
 
 def map(x1, in_min, in_max, out_min, out_max):  #function for sensor calibration
     return int((x1-in_min) * (out_max-out_min) / (in_max-in_min) + out_min)
@@ -90,35 +91,44 @@ def write():
     f.write("  WaterTemperature = ")
     f.write(str(WaterTemperature()))
     f.write("  ")
-    
     f.write("  Ph = ")
     f.write(str(pH2_0()))
     f.write("  ")
-    
-    
     f.write("  Turbidity = ")
     f.write(str(Turbidity()))
     f.write("  ")
-    
-    
     f.write("  Ambient Temperature = ")
     f.write(str(Temp_Humidity_Values[0]))
     f.write("  ")
-    
     f.write("  Atmospheric Pressure = ")
     f.write(str(Temp_Humidity_Values[1]))
     f.write("  ")
-    
     f.write("  Ambient Humidity = ")
     f.write(str(Temp_Humidity_Values[2]))
     f.write("  ")
-    
     f.write("\n")
     f.close()
 
+def toggle_gpio(state,gpio_pin):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(gpio_pin, GPIO.OUT)
+    if state == "on":
+        GPIO.output(gpio_pin, GPIO.HIGH)
+        print(" GPIO port on")
+    elif state == "off":
+        GPIO.output(gpio_pin, GPIO.LOW)
+        print("GPIO port off")
+    else:
+        print("Invalid state, Must be 'on' or 'off'.")
+        
+
+    
 while True:
+    toggle_gpio("on",21)
+    time.sleep(40)
     write()
-    #print(Temp_Humidity())
-    #print(pH2_0(),WaterTemperature(),Turbidity())
     enviar=requests.get("https://api.thingspeak.com/update?api_key=3WLMTG6CBXPKOBK5&field1="+str(WaterTemperature())+"&field2="+str(pH2_0())+"&field3="+str(Turbidity())+"&field4="+str(Temp_Humidity_Values[0])+"&field5="+str(Temp_Humidity_Values[1])+"&field6="+str(Temp_Humidity_Values[2]))
-    time.sleep(900)
+    print(Turbidity(),WaterTemperature(),pH2_0(),Temp_Humidity())
+    toggle_gpio("off",21)
+    time.sleep(300)
+    
